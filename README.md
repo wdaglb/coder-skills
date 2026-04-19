@@ -1,4 +1,4 @@
-# coder-skills
+# @kingeast/coder-skills
 
 把当前项目内的 `AGENTS.md` 与 `skills/*` 软链接安装到 Codex / Claude Code。
 
@@ -16,10 +16,16 @@ pnpm coder-skills install
 pnpm exec coder-skills install
 ```
 
+先安装依赖时使用包名：
+
+```bash
+pnpm add -D @kingeast/coder-skills
+```
+
 ### 临时执行一次
 
 ```bash
-pnpm dlx coder-skills install
+pnpm dlx @kingeast/coder-skills install
 ```
 
 ## 常用参数
@@ -33,7 +39,7 @@ pnpm dlx coder-skills install
 示例：
 
 ```bash
-pnpm dlx coder-skills install --target codex
+pnpm dlx @kingeast/coder-skills install --target codex
 pnpm exec coder-skills install --force
 ```
 
