@@ -1,0 +1,46 @@
+{
+  "name": "coder-skills",
+  "version": "1.0.0",
+  "description": "Install AGENTS.md and skills into Codex and Claude Code via symlinks.",
+  "main": "bin/coder-skills.js",
+  "type": "commonjs",
+  "bin": {
+    "coder-skills": "./bin/coder-skills.js"
+  },
+  "scripts": {
+    "coder-skills": "node ./bin/coder-skills.js"
+  },
+  "files": [
+    "bin",
+    "skills",
+    "AGENTS.md",
+    "README.md",
+    "UPGRADE.md"
+  ],
+  "keywords": [
+    "codex",
+    "claude-code",
+    "agents",
+    "skills",
+    "cli",
+    "symlink"
+  ],
+  "author": "wanz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wdaglb/coder-skills.git"
+  },
+  "homepage": "https://github.com/wdaglb/coder-skills#readme",
+  "bugs": {
+    "url": "https://github.com/wdaglb/coder-skills/issues"
+  },
+  "license": "ISC",
+  "preferGlobal": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

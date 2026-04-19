@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pencil 设计复现"
+  short_description: "按 Pencil 设计稿先做确认 demo，再落地现有或新页面"
+  default_prompt: "Use $pencil-design-replica to inspect the current Pencil canvas, .pen file, or design screenshot, build a confirmation demo first, then integrate the approved UI into the current project while preserving existing business logic when needed."
