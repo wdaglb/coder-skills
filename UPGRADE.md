@@ -2,6 +2,27 @@
 
 记录已发布版本的主要变化，便于安装、升级与回溯。
 
+## 1.0.2 - 2026-04-19
+
+补充 `large-file-gate` 技能，并明确 Claude Code 侧软链接行为。
+
+### 新增
+
+- 新增 `large-file-gate` 技能，用于在读取未知大小的文件前先执行 100KB 门禁检查，避免把大日志、大导出文件或生成产物直接读入上下文。
+- `large-file-gate` 会随 `install` 一起安装到：
+  - Codex：`~/.codex/skills/large-file-gate`
+  - Claude Code：`~/.claude/skills/large-file-gate`
+
+### 文档说明
+
+- 明确了 Claude Code 目标文件名为单数 `AGENT.md`，目标路径为 `~/.claude/AGENT.md`。
+- 补充了覆盖规则说明：当 `~/.claude/AGENT.md` 已存在且不是当前项目软链接时，安装流程不会静默覆盖，交互模式下会询问确认，非交互模式下需显式传入 `--force`。
+
+### 影响
+
+- 这是一个向后兼容的补充版本；现有 CLI 用法保持不变。
+- 新版本安装后，Codex / Claude Code 均可额外获得 `large-file-gate` 技能目录软链接。
+
 ## 1.0.1 - 2026-04-19
 
 修正发布配置并切换到 scoped npm 包名。

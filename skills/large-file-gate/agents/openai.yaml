@@ -1,0 +1,4 @@
+interface:
+  display_name: "Large File Gate"
+  short_description: "Block reads over 100KB unless user approves"
+  default_prompt: "Use $large-file-gate to enforce a 100KB read gate before opening files."

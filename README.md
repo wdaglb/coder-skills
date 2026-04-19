@@ -52,6 +52,10 @@ pnpm exec coder-skills install --force
   - `AGENTS.md` -> `~/.claude/AGENT.md`
   - `skills/<skill-name>` -> `~/.claude/skills/<skill-name>`
 
+> 注意：Claude Code 目标文件名是单数 `AGENT.md`。如果 `~/.claude/AGENT.md`
+> 已经存在且不是当前项目的软链接，安装时会保留现有文件，并在交互模式下询问是否覆盖；
+> 只有显式同意或传入 `--force` 时才会替换。
+
 ## 覆盖规则
 
 - 不存在：直接创建软链接
