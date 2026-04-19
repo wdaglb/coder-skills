@@ -1,0 +1,90 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      # 发布前先校验最关键的包元数据，避免 workflow 到发布阶段才暴露基础配置缺失。
+      - name: Validate package metadata
+        run: |
+          node <<'EOF'
+          const pkg = require("./package.json");
+          const hasCliBin = pkg.bin && pkg.bin["coder-skills"];
+
+          if (!pkg.name || !pkg.version || !hasCliBin) {
+            throw new Error("package.json is missing required publish fields");
+          }
+          EOF
+
+      # 这里不依赖额外测试脚本，直接用 dry-run 检查最终打包结果是否可生成。
+      - name: Preview npm package
+        run: npm pack --dry-run
+
+  publish:
+    name: Publish to npm
+    needs: verify
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      # 自动发布时强制要求 tag 与 package.json.version 一致，避免发错版本号。
+      - name: Check tag version matches package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+
+          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+            echo "package.json version: $PACKAGE_VERSION"
+            echo "git tag version: $TAG_VERSION"
+            echo "Tag version does not match package.json version."
+            exit 1
+          fi
+
+      - name: Publish package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm publish --no-git-checks --access public

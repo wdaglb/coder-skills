@@ -31,6 +31,9 @@
 ### 文档与发布
 
 - 新增 `README.md`，提供最小可用命令说明。
+- 新增 GitHub Actions 发布流程：
+  - 推送 `v*` tag 时自动校验并发布到 npm
+  - 支持 `workflow_dispatch` 手动触发发布
 - 补齐 npm 发布所需的基础元数据，包括：
   - `description`
   - `files`
