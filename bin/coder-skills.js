@@ -41,7 +41,7 @@ Usage:
   pnpm exec coder-skills install [--target codex|claude|all] [--force]
 
 Commands:
-  install    Create symlinks for AGENTS.md and project skills.
+  install    Create symlinks for DOC.md source and project skills.
 
 Options:
   --target   Install target. Supports codex, claude, all. Default: all
@@ -128,19 +128,20 @@ function normalizeTargets(rawValue) {
 }
 
 /**
- * 执行安装流程：先解析源目录，再按目标平台分别创建 AGENTS/AGENT 与 skills 的软链接。
+ * 执行安装流程：先解析 src 下的源目录，再按目标平台分别创建目标 AGENTS/AGENT 与 skills 的软链接。
  *
  * @param {{ targets: string[], force: boolean }} options install 选项
  * @returns {Promise<void>}
  */
 async function installSkills(options) {
   const repoRoot = path.resolve(__dirname, "..");
-  const sourceAgentsFile = path.join(repoRoot, "AGENTS.md");
-  const sourceSkillsDir = path.join(repoRoot, "skills");
+  const sourceRoot = path.join(repoRoot, "src");
+  const sourceAgentsFile = path.join(sourceRoot, "DOC.md");
+  const sourceSkillsDir = path.join(sourceRoot, "skills");
   const targets = buildTargets();
   const skillEntries = await getSkillEntries(sourceSkillsDir);
 
-  await ensureReadablePath(sourceAgentsFile, "Source AGENTS.md was not found");
+  await ensureReadablePath(sourceAgentsFile, "Source DOC.md was not found");
   await ensureReadablePath(sourceSkillsDir, "Source skills directory was not found");
 
   const prompt = createPrompt(options.force);

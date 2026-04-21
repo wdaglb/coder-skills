@@ -2,6 +2,33 @@
 
 记录已发布版本的主要变化，便于安装、升级与回溯。
 
+## 1.0.6 - 2026-04-22
+
+重构技能目录布局，并强化规划类技能的分工与收敛规则。
+
+### 变更
+
+- 将仓库内技能源目录迁移到 `src/` 下：
+  - `AGENTS.md` / `skills/*` 的源布局调整为 `src/DOC.md` 与 `src/skills/*`
+  - CLI 安装逻辑同步改为从 `src/` 读取源文件
+- 保持外部安装目标不变：
+  - Codex 仍安装到 `~/.codex/AGENTS.md` 与 `~/.codex/skills/*`
+  - Claude Code 仍安装到 `~/.claude/AGENT.md` 与 `~/.claude/skills/*`
+- 新增 `ambiguity-planner` 技能，用于处理中 / 高歧义任务的分步收敛与逐步规划
+- 重构 `execution-gate`，将其职责收敛为统一门禁、低歧义简化规划、中高歧义转交与边界把关
+- 明确中 / 高歧义任务的方案文件规则：
+  - 仅中 / 高歧义任务询问是否落实到方案文件
+  - 用户确认后，自动检查并创建 `docs/plans` 后再写入方案文件
+- 强化 `ambiguity-planner` 的推进边界：
+  - 允许持续推进
+  - 防止无限推进
+  - 防止过深推进到实现级细节
+
+### 影响
+
+- 这是一个向后兼容的发布版本；外部安装路径与 CLI 基本用法保持不变
+- 若有直接依赖仓库内部源路径的脚本，需要从根目录 `AGENTS.md` / `skills/*` 切换到 `src/DOC.md` / `src/skills/*`
+
 ## 1.0.2 - 2026-04-19
 
 补充 `large-file-gate` 技能，并明确 Claude Code 侧软链接行为。
@@ -51,7 +78,7 @@
   - `pnpm coder-skills install`
   - `pnpm exec coder-skills install`
   - `pnpm dlx @kingeast/coder-skills install`
-- 新增 `install` 子命令，支持将当前项目内的 `AGENTS.md` 与 `skills/*` 以软链接方式安装到：
+- 新增 `install` 子命令，支持将当前项目 `src/` 目录下的 `DOC.md` 与 `skills/*` 以软链接方式安装到：
   - Codex：`~/.codex/AGENTS.md`、`~/.codex/skills/<skill-name>`
   - Claude Code：`~/.claude/AGENT.md`、`~/.claude/skills/<skill-name>`
 - 新增常用参数：

@@ -1,6 +1,6 @@
 # @kingeast/coder-skills
 
-把当前项目内的 `AGENTS.md` 与 `skills/*` 软链接安装到 Codex / Claude Code。
+把当前项目 `src/` 目录下的 `DOC.md` 与 `skills/*` 软链接安装到 Codex / Claude Code。
 
 ## 直接用
 
@@ -46,10 +46,10 @@ pnpm exec coder-skills install --force
 ## 会安装到哪里
 
 - Codex
-  - `AGENTS.md` -> `~/.codex/AGENTS.md`
+  - `DOC.md` -> `~/.codex/AGENTS.md`
   - `skills/<skill-name>` -> `~/.codex/skills/<skill-name>`
 - Claude Code
-  - `AGENTS.md` -> `~/.claude/AGENT.md`
+  - `DOC.md` -> `~/.claude/AGENT.md`
   - `skills/<skill-name>` -> `~/.claude/skills/<skill-name>`
 
 > 注意：Claude Code 目标文件名是单数 `AGENT.md`。如果 `~/.claude/AGENT.md`

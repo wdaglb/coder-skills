@@ -1,6 +1,6 @@
 {
   "name": "@kingeast/coder-skills",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "Install AGENTS.md and skills into Codex and Claude Code via symlinks.",
   "main": "bin/coder-skills.js",
   "type": "commonjs",
@@ -12,8 +12,7 @@
   },
   "files": [
     "bin",
-    "skills",
-    "AGENTS.md",
+    "src",
     "README.md",
     "UPGRADE.md"
   ],
