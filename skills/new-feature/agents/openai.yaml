@@ -1,4 +1,0 @@
-interface:
-  display_name: "需求澄清门"
-  short_description: "实作前先过澄清门，并把确认节点改走 approval flow"
-  default_prompt: "使用 $new-feature 先输出任务理解、执行清单和歧义分级；遇到需要确认的节点时不要直接提问，改用受控动作触发 approval flow。"
