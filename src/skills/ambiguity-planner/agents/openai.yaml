@@ -1,4 +1,4 @@
 interface:
   display_name: "歧义规划器"
-  short_description: "处理中高歧义任务的分步澄清、影响分析、推荐方案与逐步规划"
-  default_prompt: "使用 $ambiguity-planner 处理中高歧义任务：按步骤逐步收敛当前最关键的问题，说明推荐做法、影响与 A / B / C / D 固定选项，并在用户确认后推进下一步。"
+  short_description: "处理中高歧义任务的分步澄清、推荐方案与逐步规划"
+  default_prompt: "使用 $ambiguity-planner 处理中高歧义任务：按步骤逐步收敛当前最关键的问题，先给出基于当前信息估计出的具体总步数、当前推荐与 A / B / C / D 固定选项，不要在用户选择前单独输出影响分节；在用户确认后，再结合已确认边界说明该选择带来的影响并推进下一步。"

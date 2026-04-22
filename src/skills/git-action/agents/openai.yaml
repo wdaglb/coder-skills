@@ -1,4 +1,4 @@
 interface:
   display_name: "Git 操作门"
   short_description: "统一处理任务前后的 Git 分支、脏工作树与高风险 Git 操作审批边界"
-  default_prompt: "使用 $git-action 处理当前任务的 Git 操作：先识别是否在 Git 仓库、是否存在未提交改动，再按最小可控原则处理任务分支创建、分支收尾，以及 merge、push、rebase、reset 等高风险 Git 动作的审批边界。"
+  default_prompt: "使用 $git-action 处理当前任务的 Git 操作：先识别是否在 Git 仓库、是否存在未提交改动，再按最小可控原则处理任务分支创建、分支收尾，以及 merge、push、rebase、reset 等高风险 Git 动作的审批边界；若需要 commit，提交消息必须简短概括本次实际功能改动，不能写成“提交所有代码”之类空泛描述。"
