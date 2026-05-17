@@ -61,10 +61,11 @@
 - 内容一更新，本机代理就直接用最新版本
 - 不会在不同项目里留下多份彼此漂移的旧副本
 
-默认支持两个目标：
+默认支持三个目标：
 
 - `codex`
 - `claude`
+- `opencode`
 
 不传 `--target` 时，会同时安装到两者。
 
@@ -74,6 +75,7 @@
 
 - Codex: `~/.codex/AGENTS.md` 和 `~/.codex/skills/*`
 - Claude Code: `~/.claude/AGENT.md` 和 `~/.claude/skills/*`
+- OpenCode: `~/.config/opencode/AGENTS.md` 和 `~/.config/opencode/skills/*`
 
 如果目标位置已经有文件，CLI 会根据当前是否为交互终端，以及你是否传入 `--force`，决定是询问覆盖还是保留现状。
 
@@ -103,6 +105,7 @@ pnpm dlx @kingeast/coder-skills install
 ```bash
 --target codex
 --target claude
+--target opencode
 --target all
 --force
 ```
@@ -111,6 +114,7 @@ pnpm dlx @kingeast/coder-skills install
 
 ```bash
 pnpm dlx @kingeast/coder-skills install --target codex
+pnpm dlx @kingeast/coder-skills install --target opencode
 pnpm exec coder-skills install --force
 ```
 
@@ -130,6 +134,7 @@ pnpm exec coder-skills install --force
 ```bash
 CODEX_HOME=/custom/codex/home
 CLAUDE_HOME=/custom/claude/home
+OPENCODE_HOME=/custom/opencode/home
 pnpm exec coder-skills install
 ```
 

@@ -37,19 +37,20 @@ function printHelp() {
   console.log(`coder-skills
 
 Usage:
-  pnpm coder-skills install [--target codex|claude|all] [--force]
-  pnpm exec coder-skills install [--target codex|claude|all] [--force]
+  pnpm coder-skills install [--target codex|claude|opencode|all] [--force]
+  pnpm exec coder-skills install [--target codex|claude|opencode|all] [--force]
 
 Commands:
   install    Create symlinks for DOC.md source and project skills.
 
 Options:
-  --target   Install target. Supports codex, claude, all. Default: all
+  --target   Install target. Supports codex, claude, opencode, all. Default: all
   --force    Replace existing targets without prompting
 
 Environment:
   CODEX_HOME   Override Codex home directory (default: ~/.codex)
   CLAUDE_HOME  Override Claude Code home directory (default: ~/.claude)
+  OPENCODE_HOME Override OpenCode home directory (default: ~/.config/opencode)
 `);
 }
 
@@ -61,7 +62,7 @@ Environment:
  */
 function parseInstallOptions(args) {
   const options = {
-    targets: ["codex", "claude"],
+    targets: ["codex", "claude", "opencode"],
     force: false,
   };
 
@@ -113,10 +114,10 @@ function normalizeTargets(rawValue) {
   }
 
   if (requestedTargets.includes("all")) {
-    return ["codex", "claude"];
+    return ["codex", "claude", "opencode"];
   }
 
-  const allowedTargets = new Set(["codex", "claude"]);
+  const allowedTargets = new Set(["codex", "claude", "opencode"]);
 
   for (const target of requestedTargets) {
     if (!allowedTargets.has(target)) {
@@ -199,11 +200,17 @@ async function installSkills(options) {
  * 为不同客户端提供明确的目标路径。
  * Claude Code 当前本机目录表现为 AGENT.md，因此这里映射单数文件名。
  *
- * @returns {{ codex: { label: string, agentsPath: string, skillsPath: string }, claude: { label: string, agentsPath: string, skillsPath: string } }}
+ * @returns {{
+ *   codex: { label: string, agentsPath: string, skillsPath: string },
+ *   claude: { label: string, agentsPath: string, skillsPath: string },
+ *   opencode: { label: string, agentsPath: string, skillsPath: string }
+ * }}
  */
 function buildTargets() {
   const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), ".codex");
   const claudeHome = process.env.CLAUDE_HOME || path.join(os.homedir(), ".claude");
+  const opencodeHome =
+    process.env.OPENCODE_HOME || path.join(os.homedir(), ".config", "opencode");
 
   return {
     codex: {
@@ -215,6 +222,13 @@ function buildTargets() {
       label: "Claude Code",
       agentsPath: path.join(claudeHome, "AGENT.md"),
       skillsPath: path.join(claudeHome, "skills"),
+    },
+    // OpenCode 官方文档当前把全局规则与 skills 都放在 ~/.config/opencode 下，
+    // 这里直接对齐其原生目录，避免继续借用 Claude 兼容路径造成混淆。
+    opencode: {
+      label: "OpenCode",
+      agentsPath: path.join(opencodeHome, "AGENTS.md"),
+      skillsPath: path.join(opencodeHome, "skills"),
     },
   };
 }

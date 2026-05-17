@@ -2,6 +2,30 @@
 
 记录已发布版本的主要变化，便于安装、升级与回溯。
 
+## 1.0.10 - 2026-05-17
+
+安装命令新增 OpenCode 目标，便于把规则与 skills 一起挂到 OpenCode 本地目录。
+
+### 新增
+
+- `install` 子命令新增 `opencode` 目标：
+  - 支持 `--target opencode`
+  - `--target all` 现在会同时覆盖 `codex`、`claude`、`opencode`
+- 新增环境变量 `OPENCODE_HOME`，默认路径为 `~/.config/opencode`
+- OpenCode 安装路径为：
+  - `~/.config/opencode/AGENTS.md`
+  - `~/.config/opencode/skills/<skill-name>`
+
+### 文档说明
+
+- `README.md` 已同步补充 OpenCode 支持、示例命令与自定义目录说明。
+- 同步补充通用 Git 提交规范，明确 commit message 不得追加 AI 助手身份尾巴。
+
+### 影响
+
+- 这是一个向后兼容的补充版本；原有 `codex` / `claude` 安装方式不变。
+- 若你此前对 OpenCode 采用手工拷贝或自建链接，改用新版 `install` 时可能会遇到覆盖提示；如需直接替换，可显式传入 `--force`。
+
 ## 1.0.9 - 2026-04-26
 
 强化重歧义任务的主动补盲要求，并同步调整执行门禁的交付摘要措辞。

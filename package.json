@@ -1,7 +1,7 @@
 {
   "name": "@kingeast/coder-skills",
-  "version": "1.0.9",
-  "description": "Install AGENTS.md and skills into Codex and Claude Code via symlinks.",
+  "version": "1.0.10",
+  "description": "Install AGENTS.md and skills into Codex, Claude Code, and OpenCode via symlinks.",
   "main": "bin/coder-skills.js",
   "type": "commonjs",
   "bin": {
@@ -19,6 +19,7 @@
   "keywords": [
     "codex",
     "claude-code",
+    "opencode",
     "agents",
     "skills",
     "cli",
