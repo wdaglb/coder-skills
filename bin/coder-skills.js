@@ -5,7 +5,6 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const os = require("node:os");
-const readline = require("node:readline/promises");
 const process = require("node:process");
 
 /**
@@ -45,7 +44,7 @@ Commands:
 
 Options:
   --target   Install target. Supports codex, claude, opencode, all. Default: all
-  --force    Replace existing targets without prompting
+  --force    Kept for backward compatibility; existing targets are replaced by default
 
 Environment:
   CODEX_HOME   Override Codex home directory (default: ~/.codex)
@@ -145,50 +144,41 @@ async function installSkills(options) {
   await ensureReadablePath(sourceAgentsFile, "Source DOC.md was not found");
   await ensureReadablePath(sourceSkillsDir, "Source skills directory was not found");
 
-  const prompt = createPrompt(options.force);
   let skippedCount = 0;
   let linkedCount = 0;
 
-  try {
-    for (const targetName of options.targets) {
-      const targetConfig = targets[targetName];
+  for (const targetName of options.targets) {
+    const targetConfig = targets[targetName];
 
-      if (!targetConfig) {
-        throw new Error(`Missing target config: ${targetName}`);
-      }
+    if (!targetConfig) {
+      throw new Error(`Missing target config: ${targetName}`);
+    }
 
-      console.log(`\n[${targetConfig.label}]`);
+    console.log(`\n[${targetConfig.label}]`);
 
-      await fs.mkdir(path.dirname(targetConfig.agentsPath), { recursive: true });
-      await fs.mkdir(targetConfig.skillsPath, { recursive: true });
+    await fs.mkdir(path.dirname(targetConfig.agentsPath), { recursive: true });
+    await fs.mkdir(targetConfig.skillsPath, { recursive: true });
 
-      const agentsResult = await ensureSymlink({
-        sourcePath: sourceAgentsFile,
-        destinationPath: targetConfig.agentsPath,
-        force: options.force,
-        prompt,
-        label: `${targetConfig.label} ${path.basename(targetConfig.agentsPath)}`,
+    const agentsResult = await ensureSymlink({
+      sourcePath: sourceAgentsFile,
+      destinationPath: targetConfig.agentsPath,
+      label: `${targetConfig.label} ${path.basename(targetConfig.agentsPath)}`,
+    });
+
+    linkedCount += agentsResult.linked ? 1 : 0;
+    skippedCount += agentsResult.skipped ? 1 : 0;
+
+    for (const skillEntry of skillEntries) {
+      const destinationPath = path.join(targetConfig.skillsPath, skillEntry.name);
+      const skillResult = await ensureSymlink({
+        sourcePath: skillEntry.path,
+        destinationPath,
+        label: `${targetConfig.label} skill/${skillEntry.name}`,
       });
 
-      linkedCount += agentsResult.linked ? 1 : 0;
-      skippedCount += agentsResult.skipped ? 1 : 0;
-
-      for (const skillEntry of skillEntries) {
-        const destinationPath = path.join(targetConfig.skillsPath, skillEntry.name);
-        const skillResult = await ensureSymlink({
-          sourcePath: skillEntry.path,
-          destinationPath,
-          force: options.force,
-          prompt,
-          label: `${targetConfig.label} skill/${skillEntry.name}`,
-        });
-
-        linkedCount += skillResult.linked ? 1 : 0;
-        skippedCount += skillResult.skipped ? 1 : 0;
-      }
+      linkedCount += skillResult.linked ? 1 : 0;
+      skippedCount += skillResult.skipped ? 1 : 0;
     }
-  } finally {
-    await prompt.close();
   }
 
   console.log("\nDone.");
@@ -254,19 +244,17 @@ async function getSkillEntries(sourceSkillsDir) {
 
 /**
  * 对单个目标创建软链接。
- * 若目标已存在，则在非 force 模式下逐项询问，避免误覆盖用户已有配置。
+ * 若目标已存在且不是当前源链接，则默认直接替换，保持 install 行为稳定可预期。
  *
  * @param {{
  *   sourcePath: string,
  *   destinationPath: string,
- *   force: boolean,
- *   prompt: { confirm: (message: string) => Promise<boolean>, close: () => Promise<void> },
  *   label: string
  * }} params 链接参数
  * @returns {Promise<{ linked: boolean, skipped: boolean }>}
  */
 async function ensureSymlink(params) {
-  const { sourcePath, destinationPath, force, prompt, label } = params;
+  const { sourcePath, destinationPath, label } = params;
   const existingEntry = await readExistingEntry(destinationPath);
 
   if (existingEntry && (await pointsToSameSource(existingEntry, destinationPath, sourcePath))) {
@@ -275,18 +263,7 @@ async function ensureSymlink(params) {
   }
 
   if (existingEntry) {
-    const shouldReplace =
-      force ||
-      (await prompt.confirm(
-        `${label} already exists at ${destinationPath}. Replace it? [y/N] `,
-      ));
-
-    if (!shouldReplace) {
-      console.log(`- Skip ${label}: kept existing target`);
-      return { linked: false, skipped: true };
-    }
-
-    // 只有在用户确认后才删除现有目标，避免无提示覆盖用户自己的配置。
+    // install 以当前仓库内容为准；已有目标只要不是同一链接，就直接替换成最新源。
     await fs.rm(destinationPath, { recursive: true, force: true });
   }
 
@@ -339,45 +316,6 @@ async function pointsToSameSource(existingEntry, destinationPath, expectedSource
   } catch {
     return false;
   }
-}
-
-/**
- * 创建交互确认器。非 TTY 环境下如果发生覆盖冲突，会明确失败而不是静默跳过或误删。
- *
- * @param {boolean} force 是否已启用强制覆盖
- * @returns {{ confirm: (message: string) => Promise<boolean>, close: () => Promise<void> }}
- */
-function createPrompt(force) {
-  if (force) {
-    return {
-      confirm: async () => true,
-      close: async () => {},
-    };
-  }
-
-  if (!process.stdin.isTTY || !process.stdout.isTTY) {
-    return {
-      confirm: async (message) => {
-        throw new Error(`${message}Cannot prompt in a non-interactive terminal. Re-run with --force if replacement is intended.`);
-      },
-      close: async () => {},
-    };
-  }
-
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return {
-    confirm: async (message) => {
-      const answer = await rl.question(message);
-      return ["y", "yes"].includes(answer.trim().toLowerCase());
-    },
-    close: async () => {
-      rl.close();
-    },
-  };
 }
 
 /**
