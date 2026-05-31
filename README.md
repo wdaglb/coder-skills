@@ -10,6 +10,9 @@
 - `ambiguity-planner`
   处理边界不清、方案分叉、风险不稳的任务，把规划拆成一步一步可确认的固定选项。
 
+- `plan-implementation-tasks`
+  在方案文件已经落地后，把实施过程拆成 `docs/tasks/<方案文件>/tasks-N.md` 任务文件，并生成实施指导文件标明串行 / 并行分组。
+
 - `git-action`
   统一处理任务分支、脏工作树、提交消息、高风险 Git 动作的边界与规范。
 

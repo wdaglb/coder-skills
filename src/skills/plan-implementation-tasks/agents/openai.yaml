@@ -1,0 +1,4 @@
+interface:
+  display_name: "规划实施任务"
+  short_description: "将已确认方案拆成逐步可执行的任务文件并等待实施确认"
+  default_prompt: "使用 $plan-implementation-tasks 将已落地并确认的方案文件拆分为实施任务文件，按步骤写入 docs/tasks/<方案文件>/tasks-1.md 等，并生成 implementation-guide.md 标明串行/并行分组、详细 agent 执行流程和边界事件处理；规划完毕后必须询问用户是否按 implementation-guide.md 按步骤执行。"
