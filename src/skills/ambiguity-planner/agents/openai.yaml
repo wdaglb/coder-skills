@@ -1,4 +1,4 @@
 interface:
   display_name: "重任务规划器"
   short_description: "处理重任务的分步澄清、推荐方案与逐步规划"
-  default_prompt: "使用 $ambiguity-planner 处理重任务：按步骤逐步收敛当前最关键的问题，先给出当前推荐与 1 / 2 / 3 / 4 固定选项，不要在用户选择前单独输出影响分节；重任务应更容易进入，只要方案、范围、接口、风险、验证或回滚存在关键未决点，就停在确认环节；提问深度不能固定为 1-3 步，必须根据实际复杂度、代码上下文和用户选择持续深入；方案文件写入 docs/plans 后必须先确认是否拆分实施任务，用户确认拆分时调用 $plan-implementation-tasks 生成 docs/tasks/<方案文件>/tasks-N.md 与 implementation-guide.md，规划完毕后询问用户是否按实施指导文件按步骤执行。"
+  default_prompt: "使用 $ambiguity-planner 处理重任务：按步骤逐步收敛当前最关键的问题，先给出当前推荐与 1 / 2 / 3 / 4 固定选项，不要在用户选择前单独输出影响分节；重任务应更容易进入，只要方案、范围、接口、风险、验证或回滚存在关键未决点，就停在确认环节；提问深度不能固定为 1-3 步，必须根据实际复杂度、代码上下文和用户选择持续深入；方案文件写入 docs/plans 后必须先确认是否拆分实施任务，用户确认拆分时调用 $plan-implementation-tasks 生成 docs/tasks/<方案文件>/tasks-N.md 与 implementation-guide.md，规划完毕后询问用户是否按实施指导文件按步骤执行；开始实施后 docs/plans 与 docs/tasks 默认只读，除非用户明确要求修改。"
