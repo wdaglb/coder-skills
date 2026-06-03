@@ -1,6 +1,6 @@
 ---
 name: plan-implementation-tasks
-description: 规划实施任务。Use when a confirmed plan file has already been written to docs/plans and the user wants to split implementation into executable task files under docs/tasks/{plan-file}/tasks-1.md, tasks-2.md, etc. Trigger after plan-file landing confirmation when the user chooses to拆分实施任务; this skill creates task files plus an implementation-guide.md that marks serial vs parallel groups, provides detailed agent execution flow, handles boundary events, and recommends multi-agent execution for independent tasks, but must not implement the plan.
+description: 规划实施任务。Use when a confirmed plan file has already been written to docs/plans and the user wants to split implementation into executable task files under docs/tasks/{plan-file}/tasks-1.md, tasks-2.md, etc. Trigger after plan-file landing confirmation when the user chooses to拆分实施任务; this skill creates task files plus an implementation-guide.md that marks serial vs parallel groups, provides detailed main-agent and child-agent execution flow, handles boundary events, and recommends child-agent parallel execution for independent tasks, but must not implement the plan.
 ---
 
 # Plan Implementation Tasks
@@ -49,10 +49,21 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 并行性判断规则：
 
 - 任务修改的文件、模块、数据结构、接口契约互不重叠，且不依赖彼此产物时，可以标记为可并行。
+- 多个任务分别修改不同文件或不同目录模块，且依赖性不大、验证口径可独立完成时，优先标记为可并行候选。
 - 多个任务会修改同一文件、同一公共类型、同一接口、同一迁移或同一配置时，默认标记为串行。
 - 某任务依赖前置任务输出，例如先定义接口再接入调用方，必须把依赖关系写清楚，并放入后续串行阶段。
+- 只要任务执行中发现新的依赖、共享接口变更、写入范围重叠或验证结果互相影响，立即停止该并行组后续派发，回到主智能体重新协调。
 - 若并行性证据不足，按串行处理，不要为了提高速度强行并行。
-- 可并行任务应按“并行组”组织，同一并行组内的任务可以交给多个 agent 同时执行；不同并行组之间仍按顺序推进。
+- 可并行任务应按“并行组”组织，同一并行组内满足进入条件的任务可以交给多个子智能体（sub-agent）同时执行；不同并行组之间仍由主智能体按顺序推进。
+
+子智能体并行进入条件：
+
+- 用户已经在实施确认选项中明确允许“启用子智能体并行执行”。
+- 同一并行组内至少有两个任务，且任务写入范围按文件、目录或模块边界清晰分离。
+- 当前并行组的前置依赖已经完成；组内任务之间没有必须先后发生的接口、数据、配置或迁移依赖。
+- 每个任务都有明确的允许修改范围、禁止修改范围、验证方式和停手条件。
+- 主智能体可以自动管理子智能体：负责派发任务、监测完成度、等待同组结果、审查 diff、整合验证，并在上一组完成后再通知或启动下一组；用户不需要手动管理主智能体与子智能体。
+- 若任一子智能体报告依赖缺失、越界需求、共享文件冲突或验证失败，主智能体必须暂停该并行组整合，不再继续跨子智能体派发下游任务。
 
 ### 4. 写入任务文件与实施指导文件
 
@@ -61,7 +72,7 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 - 若方案文件为 `docs/plans/<name>.md`，任务目录为 `docs/tasks/<name>/`。
 - 若方案文件名包含空格或不适合目录名的字符，使用短横线连接的小写目录名。
 - 文件命名固定为 `tasks-1.md`、`tasks-2.md`、`tasks-3.md`，按执行顺序递增。
-- 同目录必须额外创建 `implementation-guide.md`，用于说明任务依赖、串行/并行分组和多 agent 执行建议。
+- 同目录必须额外创建 `implementation-guide.md`，用于说明任务依赖、串行/并行分组和子智能体并行执行建议。
 
 若目标任务目录已存在：
 
@@ -118,7 +129,7 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 
 ### 6. 实施指导文件模板
 
-`implementation-guide.md` 使用下面结构；内容必须足够细，能指导后续 agent 按步骤执行并在边界事件出现时停止或回到主 agent 协调：
+`implementation-guide.md` 使用下面结构；内容必须足够细，能指导后续主智能体与子智能体按步骤执行，并在边界事件出现时停止或回到主智能体协调：
 
 ```markdown
 # 实施指导：<方案标题>
@@ -132,7 +143,8 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 
 - 总任务数：<N>
 - 推荐执行方式：<串行 / 部分并行 / 全部并行>
-- 多 agent 建议：<是否建议使用多 agent>
+- 子智能体建议：<是否建议启用子智能体并行执行>
+- 并行进入条件：<哪些任务满足多个文件或模块改动、依赖性不大、写入范围不重叠、验证可独立完成>
 
 ## 任务依赖图
 
@@ -145,9 +157,9 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 
 - 执行任务：`tasks-1.md`, `tasks-2.md`
 - 并行判断：<为什么能并行，或为什么必须串行>
-- agent 建议：
-  - Agent 1：负责 `tasks-1.md`，写入范围 `<文件或模块>`
-  - Agent 2：负责 `tasks-2.md`，写入范围 `<文件或模块>`
+- 子智能体建议：
+  - 子智能体 1：负责 `tasks-1.md`，写入范围 `<文件或模块>`
+  - 子智能体 2：负责 `tasks-2.md`，写入范围 `<文件或模块>`
 
 ## 详细执行流程
 
@@ -157,14 +169,16 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 2. 重新读取本指导文件和本组任务文件，确认任务范围、写入边界和前置依赖。
 3. 若任务依赖上一组输出，先确认上一组已完成并通过对应验证。
 4. 进入实施后，`docs/plans` 与 `docs/tasks` 下的方案、任务和实施指导文件默认只读；除非用户明确要求修改这些文件，否则不得编辑。
-5. 若发现任务文件与实际代码结构冲突，停止执行并回到主 agent 协调；只有用户明确要求修改方案或任务文件时，才允许更新对应文件。
+5. 若发现任务文件与实际代码结构冲突，停止执行并回到主智能体协调；只有用户明确要求修改方案或任务文件时，才允许更新对应文件。
 
 ### 1. 派发并行组
 
-1. 主 agent 只把同一并行组内、写入范围不重叠的任务派发给多个 agent。
-2. 每个 agent 的任务说明必须包含：任务文件、允许修改范围、禁止修改范围、验证命令、边界事件处理规则。
-3. 并行 agent 启动后，主 agent 不再同时修改这些 agent 的负责范围，避免制造冲突。
-4. 任一 agent 报告越界需求、依赖缺失或冲突时，主 agent 暂停该并行组后续整合。
+1. 主智能体先确认用户已选择“启用子智能体并行执行”；若用户只选择串行执行，不得启动子智能体。
+2. 主智能体只把同一并行组内、写入范围不重叠且依赖性不大的任务派发给多个子智能体。
+3. 每个子智能体的任务说明必须包含：任务文件、允许修改范围、禁止修改范围、验证命令、边界事件处理规则。
+4. 子智能体启动后，主智能体不再同时修改这些子智能体的负责范围，避免制造冲突。
+5. 主智能体负责自动监测子智能体完成度；同一并行组未全部完成前，不通知或启动依赖该组产出的下游任务。
+6. 任一子智能体报告越界需求、依赖缺失或冲突时，主智能体暂停该并行组后续整合。
 
 ### 2. 执行单个任务
 
@@ -172,11 +186,11 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 2. 只修改任务文件列出的文件、模块或接口范围。
 3. 按任务文件的执行步骤逐项实施；每完成一个关键步骤，确认没有越过写入边界。
 4. 执行任务文件列出的验证方式；若验证失败，先在本任务范围内修复。
-5. 若修复需要超出本任务范围，停止并向主 agent 汇报，不得自行扩大范围。
+5. 若修复需要超出本任务范围，停止并向主智能体汇报，不得自行扩大范围。
 
 ### 3. 并行组整合
 
-1. 等同一并行组内所有 agent 完成后，主 agent 统一检查 diff。
+1. 等同一并行组内所有子智能体完成后，主智能体统一检查 diff。
 2. 先检查是否存在文件重叠、接口不一致、迁移顺序冲突、配置互相覆盖。
 3. 再执行该并行组的统一验证命令。
 4. 若整合失败，先定位是哪一个任务边界定义不足；默认只调整实施动作或代码范围，不修改已落地的任务文件；确需修改方案或任务文件时，必须先取得用户明确确认。
@@ -185,18 +199,19 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 
 1. 只有当前组完成标准全部满足后，才进入下一组。
 2. 下一组开始前，重新确认依赖输入是否已经由上一组产出。
-3. 若上一组产出与下一组预期不一致，停止并回到主 agent 协调；不得默认调整实施指导或任务文件，除非用户明确要求修改。
+3. 若上一组产出与下一组预期不一致，停止并回到主智能体协调；不得默认调整实施指导或任务文件，除非用户明确要求修改。
 
-## 多 agent 执行约束
+## 子智能体执行约束
 
-- 只有同一并行组内、写入范围不重叠的任务可以并行交给多个 agent。
-- 每个 agent 必须只修改自己负责的任务文件对应范围。
-- 方案文件、任务文件和 `implementation-guide.md` 是执行输入，不是实施输出；开始实施后对所有执行 agent 都是只读。
-- 每个 agent 都必须知道当前不是独占代码库，不能回退、覆盖或整理其他 agent 的改动。
-- 若执行中发现需要修改其他 agent 的负责范围，必须停止并回到主 agent 重新协调。
-- 并行组完成后，主 agent 负责统一检查 diff、整合冲突并执行验证。
+- 只有同一并行组内、写入范围不重叠且依赖性不大的任务可以并行交给多个子智能体。
+- 每个子智能体必须只修改自己负责的任务文件对应范围。
+- 方案文件、任务文件和 `implementation-guide.md` 是执行输入，不是实施输出；开始实施后对所有子智能体都是只读。
+- 每个子智能体都必须知道当前不是独占代码库，不能回退、覆盖或整理其他智能体的改动。
+- 若执行中发现需要修改其他子智能体的负责范围，必须停止并回到主智能体重新协调。
+- 并行组完成后，主智能体负责统一检查 diff、整合冲突并执行验证。
+- 主智能体负责跨子智能体的自动编排：派发、等待、汇总、通知下一组、处理冲突，不要求用户手动协调子智能体。
 
-## Agent 派发模板
+## 子智能体派发模板
 
 ```text
 你负责执行 `<tasks-N.md>`。
@@ -211,9 +226,9 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 
 执行要求：
 1. 先读取任务文件，确认目标、依赖、执行步骤和完成标准。
-2. 只在允许修改范围内实施，不要整理、回退或覆盖其他 agent 的改动。
-3. 不得修改方案文件、任务文件或实施指导文件；如果用户明确要求修改，必须由主 agent 重新协调后再处理。
-4. 如果发现必须修改禁止范围、共享接口、迁移、配置或其他 agent 负责范围，立即停止并汇报。
+2. 只在允许修改范围内实施，不要整理、回退或覆盖其他智能体的改动。
+3. 不得修改方案文件、任务文件或实施指导文件；如果用户明确要求修改，必须由主智能体重新协调后再处理。
+4. 如果发现必须修改禁止范围、共享接口、迁移、配置或其他子智能体负责范围，立即停止并汇报。
 5. 完成后运行任务文件指定验证，并在结果中列出修改文件、验证结果、未完成项和边界风险。
 ```
 
@@ -221,13 +236,14 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 
 本节不能只写“按情况处理”，必须至少覆盖下面这些边界事件；如果某一项看起来不适用，也要写明“不适用原因”：
 
-- 发现任务需要修改未授权文件：停止该任务，回到主 agent 重新协调。
-- 发现两个 agent 需要修改同一文件：取消并行，改为串行或重新拆分任务。
+- 发现任务需要修改未授权文件：停止该任务，回到主智能体重新协调。
+- 发现两个子智能体需要修改同一文件：取消并行，改为串行或重新拆分任务。
 - 发现共享接口、类型、迁移或配置需要调整：先单独形成前置任务，完成后再继续下游任务。
 - 发现方案文件与代码现状不一致：停止实施，向用户说明冲突；除非用户明确要求修改方案或任务文件，否则保持 `docs/plans` 与 `docs/tasks` 只读。
 - 发现验证命令缺失或不可运行：记录原因，先补充可替代验证方式；若验证口径会影响完成标准，回到用户确认。
 - 发现执行会扩大到方案外功能：停止并要求用户确认范围，不能把范围扩散包装成实现细节。
-- 发现并行结果发生冲突：主 agent 负责整合；必要时回滚冲突任务的局部改动并改为串行重做，不能让多个 agent 同时抢修同一冲突。
+- 发现子智能体未完成但下游任务想继续：主智能体必须等待或停止下游派发，不得让跨子智能体依赖任务提前执行。
+- 发现并行结果发生冲突：主智能体负责整合；必要时回滚冲突任务的局部改动并改为串行重做，不能让多个子智能体同时抢修同一冲突。
 - 发现存在用户未确认的破坏性动作、数据迁移、权限变更或高风险 Git 操作：停止并转回对应门禁确认。
 
 ## 推荐实施顺序
@@ -241,17 +257,17 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 - <串行任务完成后的最终验证方式>
 ```
 
-若所有任务都必须串行，仍然创建 `implementation-guide.md`，并明确说明“不建议多 agent 并行”的原因。
+若所有任务都必须串行，仍然创建 `implementation-guide.md`，并明确说明“不建议启用子智能体并行执行”的原因。
 
 ## 实施后的只读规则
 
-当用户确认按 `implementation-guide.md` 按步骤执行后：
+当用户确认按 `implementation-guide.md` 执行后：
 
 - `docs/plans/**`、`docs/tasks/**`、`implementation-guide.md` 都视为已确认输入，默认只读。
 - 实施过程中只能读取这些文件来对照范围、步骤、验证方式和停手条件。
 - 不得把“任务边界需要调整”“代码现状不一致”“验证口径不完整”直接转化为修改方案或任务文件。
 - 若确实需要修改方案、任务文件或实施指导文件，必须先停止实施，并用固定选项让用户确认是否修改这些文件。
-- 用户没有明确要求修改时，优先通过调整实施动作、补充代码内处理或回到主 agent 协调来解决，不能改写已确认计划。
+- 用户没有明确要求修改时，优先通过调整实施动作、补充代码内处理或回到主智能体协调来解决，不能改写已确认计划。
 
 ### 7. 交付后询问是否按实施指导执行
 
@@ -259,14 +275,15 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 
 - 汇报创建了哪些文件。
 - 汇报 `implementation-guide.md` 中的推荐执行方式：串行、部分并行或全部并行。
+- 若存在可并行组，说明是否建议启用子智能体并行执行，以及进入条件是什么。
 - 说明尚未开始实施。
 - 必须继续用固定选项询问用户是否按实施指导文件逐步执行；选项 1 / 2 / 3 / 4 必须使用下面口径，不要改写成“开始实施”“开始逐组实施”等模糊说法：
 
 ```text
 【选择】
-1. 按 implementation-guide.md 按步骤执行
-2. 先检查并调整任务文件或实施指导
-3. 只保留任务文件与实施指导，暂不实施
+1. 按 implementation-guide.md 执行，并对满足并行进入条件的任务启用子智能体并行执行
+2. 按 implementation-guide.md 执行，但全部由当前主智能体串行执行
+3. 先检查并调整任务文件或实施指导，暂不实施
 4. 用户自行填写
 ```
 
@@ -282,9 +299,11 @@ description: 规划实施任务。Use when a confirmed plan file has already bee
 - 不跳过 `implementation-guide.md`；即使所有任务都必须串行，也要写清楚串行原因。
 - 不在实施任务规划完毕后直接开始执行；必须先询问用户是否按 `implementation-guide.md` 按步骤执行。
 - 不把存在共享文件、共享接口、迁移顺序或上下游依赖的任务标记为可并行。
-- 不让多个 agent 同时修改同一文件、同一公共契约或同一持久化结构。
+- 不让多个子智能体同时修改同一文件、同一公共契约或同一持久化结构。
+- 不在用户未明确选择“启用子智能体并行执行”时启动子智能体。
+- 不要求用户手动管理主智能体与子智能体；主智能体必须自动负责子智能体派发、完成度监测、整合与下游通知。
 - 不生成只有任务列表、没有详细执行流程和边界事件处理的 `implementation-guide.md`。
-- 不向 agent 派发缺少允许修改范围、禁止修改范围、验证方式和停手条件的任务说明。
+- 不向子智能体派发缺少允许修改范围、禁止修改范围、验证方式和停手条件的任务说明。
 - 不省略边界事件处理清单中的任一必备边界；不适用时也必须说明不适用原因。
-- 不把最终确认选项 1 改写成“开始实施”或“开始逐组实施”；必须明确是“按 implementation-guide.md 按步骤执行”。
+- 不把最终确认选项 1 改写成“开始实施”或“开始逐组实施”；必须明确是“按 implementation-guide.md 执行，并对满足并行进入条件的任务启用子智能体并行执行”。
 - 不在开始实施后修改 `docs/plans/**`、`docs/tasks/**` 或 `implementation-guide.md`；除非用户明确要求修改这些文件。
