@@ -1,4 +1,4 @@
 interface:
   display_name: "规划实施任务"
-  short_description: "将已确认方案拆成逐步可执行的任务文件并等待实施确认"
-  default_prompt: "使用 $plan-implementation-tasks 将已落地并确认的方案文件拆分为实施任务文件，按步骤写入 docs/tasks/<方案文件>/tasks-1.md 等，并生成 implementation-guide.md 标明串行/并行分组、子智能体并行进入条件、主智能体自动编排流程和边界事件处理；规划完毕后必须询问用户是否按 implementation-guide.md 执行，并明确是否对满足条件的任务启用子智能体并行执行；开始实施后 docs/plans 与 docs/tasks 默认只读，除非用户明确要求修改。"
+  short_description: "将已确认方案拆成任务文件，前后端项目先接口契约再弹性并行"
+  default_prompt: "使用 $plan-implementation-tasks 将已落地并确认的方案文件拆分为实施任务文件，按步骤写入 docs/tasks/<方案文件>/tasks-1.md 等，并生成 implementation-guide.md 标明串行/并行分组、子智能体并行进入条件、主智能体自动编排流程和边界事件处理；若是前后端项目，默认先串行规划或补齐接口约定文档，再根据实际功能域、模块边界、文件重叠和依赖关系扩展前端编码、后端编码、联调与集成测试任务，不要机械固定为 5 个任务，其它项目类型按真实依赖分析再决定是否并行；规划完毕后必须询问用户是否按 implementation-guide.md 执行，并明确是否对满足条件的任务启用子智能体并行执行；开始实施后 docs/plans 与 docs/tasks 默认只读，除非用户明确要求修改。"
