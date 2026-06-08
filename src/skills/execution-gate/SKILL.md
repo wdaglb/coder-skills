@@ -1,6 +1,6 @@
 ---
 name: "execution-gate"
-description: "实质执行前的统一门禁。Use when the user is asking Codex to do concrete work with side effects, including not only explicit requests such as start, continue, implement, fix, modify, update, build, create, generate, execute, or edit files, but also requirement-style asks such as 新增某功能、增加某能力、补充某逻辑、支持某场景、调整某规则、优化某流程、处理某问题、排查为什么没生效、让系统按新业务规则生成结果，或直接给出待落地的需求列表、报表规则、统计口径、生成条件、指派/参与度等业务约束并隐含要求实施。 First require: 任务理解、轻/重任务判断、影响与风险识别；轻任务直接执行，重任务显式转交 $ambiguity-planner 做分步收敛；项目外扩散、高风险 Git、破坏性边界仍由本技能把关；执行意图偏离已确认需求、范围或决策时，重新确认。Do not use for casual chat, pure explanation, translation, or post-hoc summaries."
+description: "实质执行前的统一门禁，用于所有会产生文件、代码、配置、命令、数据、Git 或运行状态变化的请求。Use when the user asks to start, continue, implement, fix, modify, update, create, generate, write, run, build, test, deploy, commit, or when they say 开始做、继续、实现、修复、修改、调整、新增、补充、生成、写入、执行、落地、排查并处理、按方案走、拆任务后执行。Also use for requirement-style asks that imply implementation: feature lists, business rules, report metrics, validation rules, frontend/backend/API/database/config/document changes, bug symptoms, or requests to make the system follow new rules. Must first answer in this fixed format: 【任务理解】, 【判断】轻任务/重任务, 【风险】, then 【做法】 for light tasks or 【下一步】 for heavy tasks. Light tasks proceed directly; heavy tasks hand off to $ambiguity-planner; project-outside expansion, high-risk Git, and destructive actions require confirmation. Do not use for pure explanation, translation, brainstorming with no execution, or post-hoc summaries."
 ---
 
 # Execution Gate
@@ -14,6 +14,39 @@ description: "实质执行前的统一门禁。Use when the user is asking Codex
 - 判断任务属于轻任务还是重任务
 - 在重任务中主动识别用户未显式提出但会影响方案稳定性的边界、异常与取舍
 - 决定是直接用简化规划推进，还是转交 `$ambiguity-planner`
+
+## 触发优先级
+
+只要用户当前请求会让助手开始做实际交付，就默认触发本技能；不要等用户显式写出 `$execution-gate`。
+
+高优先级触发词包括：
+
+- 动作类：开始、继续、实现、修复、修改、调整、新增、补充、生成、写入、执行、落地、跑一下、构建、测试、提交
+- 结果类：让系统支持某规则、按新口径生成、把某能力加上、把某问题处理掉、把方案继续做完
+- 症状类：为什么没生效、这里报错、页面不对、接口失败、某状态卡住，并且用户期望排查或修复
+- 需求列表类：用户直接给出字段、规则、口径、报表、流程、验收条件或 TODO，且隐含要求落地
+
+以下情况不要强行触发：
+
+- 用户明确只要解释、翻译、总结、复盘或头脑风暴
+- 用户明确说“只看方案”“不要改文件”“先分析”，且当前轮没有要求产生正式改动
+- 任务已经完成，用户只是在追问已发生结果或让助手复述
+
+## 回答格式硬约束
+
+触发本技能后的首段必须使用固定四行结构，不要自由发挥成段落、长列表或多套摘要：
+
+```text
+【任务理解】一句话回显当前要做什么
+【判断】轻任务，可直接执行 / 重任务，先做收敛
+【风险】明确写出已知风险；没有就写“无”
+【做法】轻任务写一句推荐做法 / 【下一步】重任务写一句转交 $ambiguity-planner 的收敛方向
+```
+
+- 第四行只能二选一：轻任务用 `【做法】`，重任务用 `【下一步】`
+- 不再使用额外阶段标题，不写 `【实施中】`、`【规划确认中】`、`【当前阶段】` 等变体
+- 不要在固定四行前插入背景解释；除非上层系统要求说明技能使用，否则第一行就是 `【任务理解】`
+- 固定四行之后才进入实施、调用工具、给固定选项或转交其他技能
 
 ## 快速决策表
 
@@ -221,8 +254,7 @@ description: "实质执行前的统一门禁。Use when the user is asking Codex
 ### 轻任务开场
 
 ```text
-【实施中】用一句话说明当前要解决什么问题
-
+【任务理解】用一句话说明当前要解决什么问题
 【判断】轻任务，可直接执行
 【风险】明确写出已知风险；没有就写“无”
 【做法】一句话说明当前推荐做法
@@ -231,21 +263,18 @@ description: "实质执行前的统一门禁。Use when the user is asking Codex
 ### 重任务开场
 
 ```text
-【规划确认中】用一句话说明当前要解决什么问题
-
+【任务理解】用一句话说明当前要解决什么问题
 【判断】重任务，先做收敛
 【风险】明确写出已知风险；没有就写“无”
-【规划】一句话说明当前最值得先确认的方向，并说明下一步将使用 $ambiguity-planner
+【下一步】一句话说明当前最值得先确认的方向，并说明下一步将使用 $ambiguity-planner
 ```
 
 遵循以下要求：
 
-- 首行使用单标题格式：`【当前阶段】一句话任务目标`。
-- 标题中的“当前阶段”只能从以下固定集合中选择：`规划确认中`、`实施中`、`验证中`、`已完成`。
-- 不要自行扩写阶段标题，不要写成 `实施中：待确认项目外扩散边界`、`规划确认中-方案 A`、`验证中（静态）` 这类变体。
-- 需要补充边界、条件、说明时，写到 `【判断】`、`【风险】`、`【做法】` 或 `【规划】` 中，不要塞进标题。
-- 标题里的任务目标只写一句，直接说明目标，不铺背景。
-- 默认使用“单标题阶段 + 判断/风险/做法/规划”的表达方式，不写步骤清单，不写数字进度。
+- 首行固定使用 `【任务理解】`，不要改成阶段标题。
+- 需要补充边界、条件、说明时，写到 `【判断】`、`【风险】`、`【做法】` 或 `【下一步】` 中。
+- `【任务理解】` 只写一句，直接说明目标，不铺背景。
+- 默认使用“四行门禁判断”的表达方式，不写步骤清单，不写数字进度。
 - 先给结论，再展开细节。
 - 轻任务使用“轻任务开场”；重任务使用“重任务开场”。
 - 第一条回复必须以这段结构开场；不能把这段结构放在已经实施之后补写。
@@ -325,10 +354,22 @@ description: "实质执行前的统一门禁。Use when the user is asking Codex
 
 - 先结论后细节。
 - 不把猜测、建议、待确认方案写成已确认事实。
-- 不要发明新的阶段标题；如果固定集合不够表达语义，就在进度项或风险项补充。
+- 不要发明新的门禁标题；如果固定四行不够表达语义，就在 `【风险】`、`【做法】` 或 `【下一步】` 中补充。
 - 发现影响范围升级时，重新过一次门禁。
 - 若用户已明确表示该次会话内不要继续询问，也不得自行补齐尚未明确的未决点。
 - 不得把“尚未发生的修改”“尚未执行的验证”“预计能得到的结果”写成既成事实。
+
+## 任务收尾审查
+
+代码任务完成后、输出最终交付摘要前，必须调用 `$audit-completion-risks` 审查当前 diff。
+
+收尾审查要求：
+
+- 只列风险，按严重程度排序，并给出文件位置。
+- 不总结优点，不评价代码好坏，不做泛泛风格审查。
+- 重点看回归风险、边界情况、失败路径、空数据、重复点击、网络失败、无关改动和验证不足。
+- 如果审查发现明确风险，先处理风险或在交付中明确列为未解决风险；不要把风险藏进“建议”里一笔带过。
+- 如果没有发现明确风险，可以在交付摘要的 `验证` 或 `未验证` 中简短说明“收尾风险审查未发现明确风险”。
 
 ## 交付摘要格式
 

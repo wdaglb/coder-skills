@@ -1,0 +1,4 @@
+interface:
+  display_name: "收尾风险审查"
+  short_description: "任务完成后按严重程度只列代码风险"
+  default_prompt: "使用 $audit-completion-risks 在任务完成后审查当前 diff，只列真实风险，按严重程度排序并给出文件位置。"
