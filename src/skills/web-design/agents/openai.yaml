@@ -1,0 +1,4 @@
+interface:
+  display_name: "网页设计"
+  short_description: "HTML 页面和静态网页模板设计交付规范，覆盖结构样式响应式"
+  default_prompt: "使用 $web-design 为当前 HTML 页面编写提供结构、样式和响应式模板。"

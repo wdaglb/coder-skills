@@ -1,4 +1,4 @@
 interface:
   display_name: "收尾风险审查"
   short_description: "任务完成后按严重程度只列代码风险"
-  default_prompt: "使用 $audit-completion-risks 在任务完成后审查当前 diff，只列真实风险，按严重程度排序并给出文件位置。"
+  default_prompt: "使用 $audit-completion-risks 在任务完成后审查当前 diff，只列真实风险，按严重程度排序并给出文件位置；审查本身保持轻量，不扩展成完整测试计划、回归清单或二次需求分析；简单任务未跑测试或 smoke 不默认算风险，只看是否已做必要的 lint/类型检查/格式检查/语法检查/静态审查；但若存在 GitNexus 影响分析能力且影响面达到 MEDIUM/HIGH/CRITICAL、多流程、关键路径或 d=1 调用方较多，未跑必要测试或 smoke 要列为风险。"
